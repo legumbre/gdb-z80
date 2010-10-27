@@ -558,7 +558,8 @@ ALL_TARGET_OBS = \
 	symfile-mem.o \
 	corelow.o \
 	windows-tdep.o \
-	linux-record.o
+	linux-record.o \
+	z80-tdep.o
 
 # Host-dependent makefile fragment comes in here.
 @host_makefile_frag@

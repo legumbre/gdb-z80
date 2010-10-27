@@ -614,6 +614,12 @@ xtensa*)
 	gdb_target_obs="xtensa-tdep.o xtensa-config.o solib.o solib-svr4.o"
 	;;
 
+z80*)
+	# Target: Z80
+	gdb_target_obs="z80-tdep.o" 
+	;;
+
+
 esac
 
 # map target onto default OS ABI
