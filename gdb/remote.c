@@ -588,7 +588,7 @@ init_remote_state (struct gdbarch *gdbarch)
   /* Record the maximum possible size of the g packet - it may turn out
      to be smaller.  */
   rsa->sizeof_g_packet = offset;
-
+  printf("sizeof_g_packet: %d\n", (int)rsa->sizeof_g_packet);
   /* Default maximum number of characters in a packet body. Many
      remote stubs have a hardwired buffer size of 400 bytes
      (c.f. BUFMAX in m68k-stub.c and i386-stub.c).  BUFMAX-1 is used

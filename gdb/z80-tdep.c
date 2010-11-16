@@ -25,6 +25,14 @@
 
 extern initialize_file_ftype _initialize_z80_tdep;
 
+static const struct frame_unwind z80_frame_unwind =
+{
+  NORMAL_FRAME,
+  z80_frame_this_id,
+  z80_frame_prev_register,
+  NULL,
+  default_frame_sniffer
+};
 
 /* Initialize the gdbarch struct for the Z80 arch */
 
@@ -78,9 +86,13 @@ z80_gdbarch_init (struct gdbarch_info info, struct gdbarch_list *arches)
   set_gdbarch_push_dummy_call (gdbarch, z80_push_dummy_call);
 
   set_gdbarch_skip_prologue (gdbarch, z80_skip_prologue);
-  set_gdbarch_inner_than (gdbarch, core_addr_lessthan);
+  set_gdbarch_inner_than (gdbarch, core_addr_lessthan); // falling stack
+  set_gdbarch_unwind_pc (gdbarch, z80_unwind_pc);
 
   set_gdbarch_breakpoint_from_pc (gdbarch, z80_breakpoint_from_pc);
+
+  frame_unwind_append_unwinder (gdbarch, &z80_frame_unwind);
+
   
   return gdbarch;
 }
@@ -98,6 +110,15 @@ _initialize_z80_tdep (void)
 static CORE_ADDR
 z80_skip_prologue (struct gdbarch *gdbarch, CORE_ADDR pc)
 {
+  CORE_ADDR func_addr, func_end;
+
+  if (!find_pc_partial_function (pc, NULL, &func_addr, &func_end))
+    return pc;
+  else
+    {
+      printf("LLL: find_pc_partial_function found something\n");
+      return pc;
+    }
 
   // LLL: avr example
 
@@ -135,7 +156,6 @@ z80_skip_prologue (struct gdbarch *gdbarch, CORE_ADDR pc)
 //      the end of the function (there probably isn't a prologue). */
 // 
 //   return pc;
-  return pc;
 }
 
 /* Register number to name mapping */
@@ -145,9 +165,16 @@ z80_register_name (struct gdbarch *gdbarch, int regnum)
 {
 
   //TODO: move this to gdbarch_tdep? (see  i386)
+//  static const char * const register_names[] = {
+//    "a", "b", "c", "d", "e", "h", "l", "ix", "iy", "i", "r", "f", "sp", "pc"
+//  };
+
+  // taken from qemu-z80 target reg mapping
   static const char * const register_names[] = {
-    "a", "b", "c", "d", "e", "h", "l", "ix", "iy", "i", "r", "f", "sp", "pc"
+    "a", "f", "bc", "de", "hl", "ix", "iy", "sp", "i", "r",
+    "ax", "fx", "bcx", "dex", "hlx", "pc"
   };
+
 
   if (regnum <0 || (regnum >= (sizeof (register_names) / sizeof (*register_names))))
     return NULL;
@@ -161,10 +188,46 @@ z80_register_name (struct gdbarch *gdbarch, int regnum)
 static struct type *
 z80_register_type (struct gdbarch *gdbarch, int reg_nr)
 {
+#define R_A     0
+#define R_F     1
+
+#define R_BC    2
+#define R_DE    3
+#define R_HL    4
+#define R_IX    5
+#define R_IY    6
+#define R_SP    7
+
+#define R_I     8
+#define R_R     9
+
+#define R_AX    10
+#define R_FX    11
+#define R_BCX   12
+#define R_DEX   13
+#define R_HLX   14
+
+  switch (reg_nr)
+    {
+    case R_A:
+    case R_F:
+    case R_I:
+    case R_R:
+    case R_AX:
+    case R_FX:
+      return builtin_type (gdbarch)->builtin_uint8;
+    default:
+      return builtin_type (gdbarch)->builtin_uint16;
+    }
+
   if ((reg_nr == Z80_PC_REGNUM)        || 
       (reg_nr == Z80_PSEUDO_PC_REGNUM) ||
       (reg_nr == Z80_SP_REGNUM))
     return gdbarch_tdep (gdbarch)->pc_type; 
+
+
+
+
   
   return builtin_type (gdbarch)->builtin_uint8;
 }
@@ -219,8 +282,10 @@ z80_return_value (struct gdbarch *gdbarch, struct type *func_type,
 static const unsigned char *
 z80_breakpoint_from_pc (struct gdbarch *gdbarch, CORE_ADDR * pcptr, int *lenptr)
 {
-  static const unsigned char z80_break_insn [] = {0x00, 0x00}; /* TODO!!: Bytes de inst RST 08 */
+  printf("entered %s\n", __FUNCTION__);
+  static const unsigned char z80_break_insn [] = {0xCF}; /* TODO!!: Bytes de inst RST 08 */
   *lenptr = sizeof (z80_break_insn);
+
   return z80_break_insn;
 }
 
@@ -239,4 +304,56 @@ z80_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
   struct stack_item *si = NULL;
 
   return bp_addr; //TODO: fix!!!
+}
+
+static CORE_ADDR
+z80_unwind_pc (struct gdbarch *gdbarch, struct frame_info *next_frame)
+{
+  CORE_ADDR pc;
+  
+  gdb_byte buf[2];
+  frame_unwind_register(next_frame, Z80_PC_REGNUM, buf);
+  pc = extract_typed_address(buf, builtin_type (gdbarch)->builtin_func_ptr);
+  return pc;
+}
+
+static void
+z80_frame_this_id (struct frame_info *next_frame, void **this_cache,
+		       struct frame_id *this_id)
+{
+
+  printf("entered %s\n", __FUNCTION__);
+  return;
+//   struct z80_frame_cache *cache =
+//     z80_frame_cache (next_frame, this_cache);
+// 
+//   /* This marks the outermost frame.  */
+//   if (cache->base == 0)
+//     return;
+// 
+//   (*this_id) = frame_id_build (cache->base, cache->pc);
+}
+
+
+static struct value *
+z80_frame_prev_register (struct frame_info *this_frame,
+				 void **this_cache, int regnum)
+{
+  printf("entered %s\n", __FUNCTION__);
+  if (*this_cache)
+    return *this_cache;
+
+  return NULL;
+
+//   struct z80_frame_cache *cache =
+//     z80_frame_cache (this_frame, this_cache);
+// 
+//   if (cache->frameless_p)
+//     {
+//       return trad_frame_get_prev_register (this_frame, cache->saved_regs, regnum);
+//     }
+//   else
+//     return trad_frame_get_prev_register (this_frame, cache->saved_regs,
+//					 regnum);
+
 }

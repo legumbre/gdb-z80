@@ -8,11 +8,11 @@
 /* Constants */
 enum
   {
-    Z80_NUM_REGS = 12 + 1 /*SP*/ + 1 /*PC*/,
-    Z80_NUM_REG_BYTES = 12 + 1 + 2 /*SP*/ + 2 /*PC*/,
-    Z80_PC_REGNUM = 13,
-    Z80_SP_REGNUM = 12,
-    Z80_PSEUDO_PC_REGNUM = 13,
+    Z80_NUM_REGS = 14 + 1 /*SP*/ + 1 /*PC*/,
+    Z80_NUM_REG_BYTES = 22 + 2 /*SP*/ + 2 /*PC*/,
+    Z80_PC_REGNUM = 15,
+    Z80_SP_REGNUM = 7,
+    Z80_PSEUDO_PC_REGNUM = 15,
     Z80_NUM_PSEUDO_REGS = 1,
   };
 
@@ -65,3 +65,14 @@ z80_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
                      struct regcache *regcache, CORE_ADDR bp_addr,
                      int nargs, struct value **args, CORE_ADDR sp,
                      int struct_return, CORE_ADDR struct_addr);
+
+static CORE_ADDR
+z80_unwind_pc (struct gdbarch *gdbarch, struct frame_info *next_frame);
+
+static void
+z80_frame_this_id (struct frame_info *next_frame, void **this_cache,
+                   struct frame_id *this_id);
+
+static struct value *
+z80_frame_prev_register (struct frame_info *this_frame,
+                         void **this_cache, int regnum);
