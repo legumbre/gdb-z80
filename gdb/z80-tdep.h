@@ -16,6 +16,27 @@ enum
     Z80_NUM_PSEUDO_REGS = 1,
   };
 
+/* registers constants */
+#define R_A     0
+#define R_F     1
+
+#define R_BC    2
+#define R_DE    3
+#define R_HL    4
+#define R_IX    5
+#define R_IY    6
+#define R_SP    7
+
+#define R_I     8
+#define R_R     9
+
+#define R_AX    10
+#define R_FX    11
+#define R_BCX   12
+#define R_DEX   13
+#define R_HLX   14
+
+
 struct gdbarch_tdep
 {
   int call_length;
