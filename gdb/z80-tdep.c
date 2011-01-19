@@ -263,10 +263,8 @@ z80_return_value (struct gdbarch *gdbarch, struct type *func_type,
 static const unsigned char *
 z80_breakpoint_from_pc (struct gdbarch *gdbarch, CORE_ADDR * pcptr, int *lenptr)
 {
-  printf("entered %s\n", __FUNCTION__);
   static const unsigned char z80_break_insn [] = {0xCF}; /* TODO!!: Bytes de inst RST 08 */
   *lenptr = sizeof (z80_break_insn);
-
   return z80_break_insn;
 }
 
