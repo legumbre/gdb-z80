@@ -116,7 +116,7 @@ z80_skip_prologue (struct gdbarch *gdbarch, CORE_ADDR pc)
     return pc;
   else
     {
-      printf("LLL: find_pc_partial_function found something\n");
+      // printf("LLL: find_pc_partial_function found something\n");
       return pc;
     }
 
@@ -301,7 +301,7 @@ z80_frame_this_id (struct frame_info *next_frame, void **this_cache,
 		       struct frame_id *this_id)
 {
 
-  printf("entered %s\n", __FUNCTION__);
+  // printf("entered %s\n", __FUNCTION__);
   return;
 //   struct z80_frame_cache *cache =
 //     z80_frame_cache (next_frame, this_cache);
@@ -318,7 +318,7 @@ static struct value *
 z80_frame_prev_register (struct frame_info *this_frame,
 				 void **this_cache, int regnum)
 {
-  printf("entered %s\n", __FUNCTION__);
+  // printf("entered %s\n", __FUNCTION__);
   if (*this_cache)
     return *this_cache;
 
